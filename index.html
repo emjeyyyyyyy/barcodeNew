@@ -2,45 +2,95 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Barcode Scanner Triggered</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <title>Barcode Scanner (QuaggaJS)</title>
+  <script src="https://unpkg.com/@ericblade/quagga2@1.2.6/dist/quagga.min.js"></script>
   <style>
-    #reader { width: 100%; max-width: 400px; margin: auto; }
-    #results { margin-top: 20px; }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 20px;
+    }
+    #scanner-container {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
+    }
+    #scanner {
+      width: 100%;
+    }
+    #result-list {
+      margin-top: 20px;
+      list-style: none;
+      padding: 0;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
-  <h2>Manual Barcode Scanner</h2>
-  <div id="reader"></div>
-  <button id="scanBtn">Scan Barcode</button>
-  <div id="results">
-    <h3>Scanned Barcodes:</h3>
-    <ul id="scanned-list"></ul>
+
+  <h2>Barcode Scanner</h2>
+  <div id="scanner-container">
+    <div id="scanner"></div>
   </div>
+  <button id="start-scan">Start Scan</button>
+  <ul id="result-list"></ul>
 
   <script>
-    const html5QrCode = new Html5Qrcode("reader");
-    const scanBtn = document.getElementById("scanBtn");
-    const scannedList = document.getElementById("scanned-list");
+    const startButton = document.getElementById('start-scan');
+    const resultList = document.getElementById('result-list');
+    let scanning = false;
 
-    scanBtn.addEventListener("click", () => {
-      html5QrCode.start(
-        { facingMode: "environment" },
-        {
-          fps: 5,
-          qrbox: { width: 300, height: 200 }
+    startButton.addEventListener('click', () => {
+      if (scanning) return;
+
+      scanning = true;
+      startButton.disabled = true;
+      startButton.textContent = 'Scanning...';
+
+      Quagga.init({
+        inputStream: {
+          name: "Live",
+          type: "LiveStream",
+          target: document.querySelector('#scanner'),
+          constraints: {
+            facingMode: "environment"
+          }
         },
-        (decodedText, decodedResult) => {
-          const li = document.createElement("li");
-          li.textContent = decodedText;
-          scannedList.appendChild(li);
-          html5QrCode.stop(); // Stop after one successful scan
+        decoder: {
+          readers: ["ean_reader", "code_128_reader", "upc_reader", "code_39_reader"]
         },
-        (errorMessage) => {
-          // Ignore scan errors
+        locate: true
+      }, err => {
+        if (err) {
+          console.error(err);
+          alert("Error initializing scanner.");
+          scanning = false;
+          startButton.disabled = false;
+          startButton.textContent = 'Start Scan';
+          return;
         }
-      );
+        Quagga.start();
+      });
+
+      Quagga.onDetected(data => {
+        const code = data.codeResult.code;
+        const li = document.createElement('li');
+        li.textContent = code;
+        resultList.appendChild(li);
+
+        // Stop scanning after one detection
+        Quagga.stop();
+        scanning = false;
+        startButton.disabled = false;
+        startButton.textContent = 'Start Scan';
+      });
     });
   </script>
+
 </body>
 </html>
