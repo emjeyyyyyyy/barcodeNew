@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mobile Barcode Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #reader {
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
+    }
+    table {
+      margin-top: 20px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .btn {
+      margin-top: 10px;
+      padding: 10px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Scan Barcode</h2>
+  <div id="reader"></div>
+  <button class="btn" onclick="restartScanner()">Scan Again</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Barcode</th>
+        <th>Title</th>
+        <th>Location</th>
+        <th>Last Seen Status</th>
+        <th>Scanned By</th>
+      </tr>
+    </thead>
+    <tbody id="scanned-results"></tbody>
+  </table>
+
+  <script>
+    const sampleKohaData = {
+      "18435": {
+        title: "Inheriting the Earth",
+        location: "Fiction",
+        lastSeenStatus: "updated",
+        scannedBy: "MJ Pajaron"
+      },
+      "12345": {
+        title: "Data Science for All",
+        location: "Technology",
+        lastSeenStatus: "updated",
+        scannedBy: "MJ Pajaron"
+      }
+    };
+
+    const reader = new Html5Qrcode("reader");
+    let isScanning = false;
+
+    function startScanner() {
+      if (isScanning) return;
+
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+          reader.start(
+            { facingMode: "environment" }, // use back camera
+            {
+              fps: 10,
+              qrbox: { width: 250, height: 100 }
+            },
+            (scannedCode) => {
+              if (sampleKohaData[scannedCode]) {
+                const data = sampleKohaData[scannedCode];
+                const newRow = `
+                  <tr>
+                    <td>${scannedCode}</td>
+                    <td>${data.title}</td>
+                    <td>${data.location}</td>
+                    <td>${data.lastSeenStatus}</td>
+                    <td>${data.scannedBy}</td>
+                  </tr>
+                `;
+                document.getElementById("scanned-results").innerHTML += newRow;
+              } else {
+                alert("Scanned barcode not found in system.");
+              }
+
+              stopScanner();
+            }
+          ).then(() => {
+            isScanning = true;
+          }).catch(err => {
+            console.error("Error starting scanner:", err);
+          });
+        }
+      }).catch(err => {
+        console.error("Camera error:", err);
+      });
+    }
+
+    function stopScanner() {
+      reader.stop().then(() => {
+        isScanning = false;
+      }).catch(err => {
+        console.error("Error stopping scanner:", err);
+      });
+    }
+
+    function restartScanner() {
+      stopScanner();
+      setTimeout(() => {
+        startScanner();
+      }, 500);
+    }
+
+    // Start scanner on page load
+    window.onload = startScanner;
+  </script>
+
+</body>
+</html>
