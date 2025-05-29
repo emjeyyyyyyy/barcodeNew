@@ -2,86 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Barcode Scanner</title>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barcode Scanner Triggered</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 10px;
-      margin: 0;
-      background-color: #f9f9f9;
-    }
-    h2 {
-      text-align: center;
-    }
-    #reader {
-      width: 100%;
-      max-width: 400px;
-      margin: 0 auto;
-    }
-    table {
-      width: 100%;
-      margin-top: 20px;
-      border-collapse: collapse;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      font-size: 14px;
-      text-align: center;
-    }
-    th {
-      background-color: #eee;
-    }
+    #reader { width: 100%; max-width: 400px; margin: auto; }
+    #results { margin-top: 20px; }
   </style>
 </head>
 <body>
-
-  <h2>📦 Scan Barcodes</h2>
+  <h2>Manual Barcode Scanner</h2>
   <div id="reader"></div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Barcode</th>
-      </tr>
-    </thead>
-    <tbody id="barcode-table-body">
-    </tbody>
-  </table>
+  <button id="scanBtn">Scan Barcode</button>
+  <div id="results">
+    <h3>Scanned Barcodes:</h3>
+    <ul id="scanned-list"></ul>
+  </div>
 
   <script>
-    const scannedBarcodes = new Set();
-
-    function onScanSuccess(decodedText, decodedResult) {
-      if (!scannedBarcodes.has(decodedText)) {
-        scannedBarcodes.add(decodedText);
-
-        const table = document.getElementById("barcode-table-body");
-        const row = document.createElement("tr");
-        row.innerHTML = `<td>${decodedText}</td>`;
-        table.appendChild(row);
-      }
-    }
-
     const html5QrCode = new Html5Qrcode("reader");
+    const scanBtn = document.getElementById("scanBtn");
+    const scannedList = document.getElementById("scanned-list");
 
-    Html5Qrcode.getCameras().then(cameras => {
-      if (cameras && cameras.length) {
-        html5QrCode.start(
-          { facingMode: "environment" }, // Use rear camera
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 }
-          },
-          onScanSuccess
-        );
-      }
-    }).catch(err => {
-      console.error("Camera error:", err);
+    scanBtn.addEventListener("click", () => {
+      html5QrCode.start(
+        { facingMode: "environment" },
+        {
+          fps: 5,
+          qrbox: { width: 300, height: 200 }
+        },
+        (decodedText, decodedResult) => {
+          const li = document.createElement("li");
+          li.textContent = decodedText;
+          scannedList.appendChild(li);
+          html5QrCode.stop(); // Stop after one successful scan
+        },
+        (errorMessage) => {
+          // Ignore scan errors
+        }
+      );
     });
   </script>
-
 </body>
 </html>
