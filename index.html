@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mobile Barcode Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #reader { width: 100%; max-width: 400px; margin: auto; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f4f4f4; }
+  </style>
+</head>
+<body>
+
+  <h2>📦 Scan a Barcode</h2>
+  <div id="reader"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Barcode</th>
+        <th>Title</th>
+        <th>Location</th>
+        <th>Status</th>
+        <th>Scanned By</th>
+      </tr>
+    </thead>
+    <tbody id="barcode-table-body">
+    </tbody>
+  </table>
+
+  <script>
+    function onScanSuccess(decodedText, decodedResult) {
+      // Stop after first successful scan
+      html5QrcodeScanner.clear();
+
+      // Append row to table
+      const table = document.getElementById("barcode-table-body");
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${decodedText}</td>
+        <td>Inheriting the Earth</td>
+        <td>Fiction</td>
+        <td>updated</td>
+        <td>MJ Pajaron</td>
+      `;
+      table.appendChild(row);
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader", { fps: 10, qrbox: 250 });
+    html5QrcodeScanner.render(onScanSuccess);
+  </script>
+
+</body>
+</html>
